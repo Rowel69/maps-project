@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Power Management with OpenStreetMap</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        #message {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+            color: green;
+            z-index: 999;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="message">Message: Waiting for road type...</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    let map, messageDiv;
+
+    // Initialize the map with Leaflet.js
+    function initMap() {
+        messageDiv = document.getElementById('message');
+
+        // Set default view for map
+        map = L.map('map').setView([37.7749, -122.4194], 13); // Default to San Francisco
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Check if geolocation is supported
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const pos = [position.coords.latitude, position.coords.longitude];
+                    map.setView(pos, 15); // Zoom in on the user's current location
+
+                    // Simulate checking the road type
+                    checkRoadType(pos);
+                },
+                () => {
+                    handleLocationError(true);
+                }
+            );
+        } else {
+            // Browser doesn't support Geolocation
+            handleLocationError(false);
+        }
+    }
+
+    // Simulated road type checking
+    function checkRoadType(location) {
+        const highways = [
+            [37.7749, -122.4194], // Location A (Highway)
+            [37.8044, -122.2711]  // Location B (Subroad)
+        ];
+
+        // Fake condition to determine road type
+        const isHighway = highways.some(road => (
+            Math.abs(road[0] - location[0]) < 0.01 && 
+            Math.abs(road[1] - location[1]) < 0.01
+        ));
+
+        if (isHighway) {
+            messageDiv.innerText = 'Message: Full Power (You are on a Highway)';
+            messageDiv.style.color = "green";
+        } else {
+            messageDiv.innerText = 'Message: Reduce Power (You are on a Subroad)';
+            messageDiv.style.color = "red";
+        }
+    }
+
+    function handleLocationError(browserHasGeolocation) {
+        messageDiv.innerText = `Error: ${browserHasGeolocation ? 'The Geolocation service failed.' : 'Your browser doesn\'t support geolocation.'}`;
+    }
+
+    // Load the map when the window loads
+    window.onload = initMap;
+</script>
+
+</body>
+</html>
